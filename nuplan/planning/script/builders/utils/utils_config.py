@@ -49,15 +49,15 @@ def update_config_for_training(cfg: DictConfig) -> None:
         logger.warning("cache_dir is not set, and thus caching is disable.")
         cfg.cache_dir = None
 
-    if cfg.lightning.trainer.overfitting.enable:
-        cfg.data_loader.params.num_workers = 0
+    # if cfg.lightning.trainer.overfitting.enable:
+    #     cfg.data_loader.params.num_workers = 0
 
-    if cfg.gpu and torch.cuda.is_available():
-        cfg.lightning.trainer.params.gpus = -1
-    else:
-        cfg.lightning.trainer.params.gpus = None
-        cfg.lightning.trainer.params.accelerator = None
-        cfg.lightning.trainer.params.precision = 32
+    # if cfg.gpu and torch.cuda.is_available():
+    #     cfg.lightning.trainer.params.gpus = -1
+    # else:
+    #     cfg.lightning.trainer.params.gpus = None
+    #     cfg.lightning.trainer.params.accelerator = None
+    #     cfg.lightning.trainer.params.precision = 32
 
     # Save all interpolations and remove keys that were only used for interpolation and have no further use.
     OmegaConf.resolve(cfg)

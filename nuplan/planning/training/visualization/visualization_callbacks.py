@@ -1,6 +1,7 @@
 import random
 from typing import Any, List, Optional
 
+import wandb
 import numpy as np
 import numpy.typing as npt
 import pytorch_lightning as pl
@@ -120,6 +121,9 @@ class RasterVisualizationCallback(pl.Callback):
 
         tag = f'{prefix}_visualization_{batch_idx}'
 
+        if not isinstance(loggers, list):
+            loggers = [loggers]
+
         for logger in loggers:
             if isinstance(logger, torch.utils.tensorboard.writer.SummaryWriter):
                 logger.add_images(
@@ -128,6 +132,10 @@ class RasterVisualizationCallback(pl.Callback):
                     global_step=training_step,
                     dataformats='NHWC',
                 )
+            elif isinstance(logger, wandb.sdk.wandb_run.Run):
+                wandb.log({tag: [wandb.Image((255 * x).astype(np.uint8)) for x in image_batch]})
+                # viz = image_batch.transpose(1, 0, 2, 3)
+                # viz = viz.reshape(viz.shape[0], viz.shape[1] * viz.shape[2], viz.shape[3])
 
     def _get_raster_images_from_batch(self, features: Raster, targets: Trajectory, predictions: Trajectory) \
             -> npt.NDArray[np.float32]:

@@ -88,15 +88,31 @@ class GraphAttention(nn.Module):
         src_dst_dist_mask = src_dst_dist <= self.dist_threshold
         # edge_src_dist_pairs.shape is (num_edges, 2).
         edge_src_dist_pairs = src_dst_dist_mask.nonzero(as_tuple=False)
-        edge_src_idx = edge_src_dist_pairs[:, 0]
-        edge_dst_idx = edge_src_dist_pairs[:, 1]
 
-        src_node_encoded_features = self.src_encoder(src_node_features)
-        dst_node_encoded_features = self.dst_encoder(dst_node_features)
+        fancy = False
 
-        # edge_src_features.shape is (num_edges, edge_src_feature_len).
-        edge_src_features = src_node_encoded_features[edge_src_idx]
-        edge_dst_features = dst_node_encoded_features[edge_dst_idx]
+        if fancy:
+            edge_src_idx = edge_src_dist_pairs[:, 0]
+            edge_src_unique = edge_src_idx.unique()
+            edge_src_mapping = torch.searchsorted(edge_src_unique, edge_src_idx)
+
+            edge_dst_idx = edge_src_dist_pairs[:, 1]
+            edge_dst_unique = edge_dst_idx.unique()
+            edge_dst_mapping = torch.searchsorted(edge_dst_unique, edge_dst_idx)
+
+            edge_src_features = self.src_encoder(src_node_features[edge_src_unique])[edge_src_mapping]
+            edge_dst_features = self.dst_encoder(dst_node_features[edge_dst_unique])[edge_dst_mapping]
+        else:
+            edge_src_idx = edge_src_dist_pairs[:, 0]
+            edge_dst_idx = edge_src_dist_pairs[:, 1]
+
+            src_node_encoded_features = self.src_encoder(src_node_features)
+            dst_node_encoded_features = self.dst_encoder(dst_node_features)
+
+            # edge_src_features.shape is (num_edges, edge_src_feature_len).
+            edge_src_features = src_node_encoded_features[edge_src_idx]
+            edge_dst_features = dst_node_encoded_features[edge_dst_idx]
+
         # edge_src_pos.shape is (num_edges, 2).
         edge_src_pos = src_node_pos[edge_src_idx]
         edge_dst_pos = dst_node_pos[edge_dst_idx]
